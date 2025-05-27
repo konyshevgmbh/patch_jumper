@@ -30,6 +30,7 @@ jobs:
         with:
           version: 4.3.0
           use-dotnet: false
+          include-templates: true
 
       - name: Verify Godot installation
         if: steps.version_check.outputs.changed == 'true'
