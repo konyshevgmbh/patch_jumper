@@ -18,16 +18,23 @@ This game was thrown together in Godot during a chaotic **30-minute coding sprin
 
 ---
 
+## 🎮 Controls
+
+- **Arrow keys** — Move left and right
+- **Spacebar** — Jump
+
+---
+
 ## 🚨 Disclaimers
 
 - **Any resemblance to real CAD tools, software, or engineering trauma is entirely your imagination. 😉**
-- **This code is a tangled mess of hacks and shortcuts.**  
-  _Do not_ use as a reference for real-world projects!  
+- **This code is a tangled mess of hacks and shortcuts.**
+  _Do not_ use as a reference for real-world projects!
   <sub>Unless you want your manager to lose their `HEAD`, too… 😅</sub>
 
 ---
 
 ## 🛠️ Dev Note
 
-_All the CAD tools I’ve ever built (or broken) live on in my heart._  
+_All the CAD tools I’ve ever built (or broken) live on in my heart._
 **Happy patching!**
