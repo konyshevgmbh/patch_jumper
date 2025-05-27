@@ -12,7 +12,7 @@ config_version=5
 
 config/name="Patch Jumper"
 config/description="You’re a stressed engineer. Dodge bugs, grab fixes, keep your HEAD, and push the build before the deadline."
-config/version="0.0.2"
+config/version="0.0.3"
 run/main_scene="res://menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
 boot_splash/image="uid://l4jtxmb2abo4"
