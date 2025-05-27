@@ -55,6 +55,15 @@ jobs:
           build-tools: 33.0.0
           ndk-version: 23.2.8568313
 
+      - name: Cache Android SDK
+        if: steps.version_check.outputs.changed == 'true'
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.android/sdk
+            ~/.android/ndk
+          key: android-sdk-${{ runner.os }}-api33-ndk23.2.8568313
+
       - name: Verify Godot installation
         if: steps.version_check.outputs.changed == 'true'
         run: godot --version
@@ -80,6 +89,16 @@ jobs:
           DISPLAY: ":99"
           ANDROID_HOME: ${{ env.ANDROID_HOME }}
           ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+
+      - name: Verify APK was created
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          if [ ! -f "build/android/patch-jumper.apk" ]; then
+            echo "❌ APK export failed"
+            exit 1
+          fi
+          echo "✅ APK created successfully"
+          ls -la build/android/
 
       - name: Add .nojekyll file
         if: steps.version_check.outputs.changed == 'true'
@@ -122,3 +141,11 @@ jobs:
             - Version bump to v${{ steps.get_version.outputs.version }}
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build Summary
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          echo "🎉 Build completed successfully!"
+          echo "📱 Android APK: patch-jumper.apk"
+          echo "🌐 Web build deployed to GitHub Pages"
+          echo "🏷️ Version: v${{ steps.get_version.outputs.version }}"
