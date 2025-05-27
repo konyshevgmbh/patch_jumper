@@ -12,18 +12,16 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Download Godot
-        run: |
-          wget https://downloads.tuxfamily.org/godotengine/4.2.2/Godot_v4.2.2-stable_linux.x86_64.zip
-          unzip Godot_v4.2.2-stable_linux.x86_64.zip
-          mv Godot_v4.2.2-stable_linux.x86_64/Godot_v4.2.2-stable_linux.x86_64 godot
+      - name: Set up Godot
+        uses: firebelley/setup-godot@v3
+        with:
+          version: 4.2.2
+          use-headless: true
 
       - name: Export project to HTML5
         run: |
           mkdir -p export/web
-          ./godot --headless --export-release "Web" export/web/index.html
-        env:
-          DISPLAY: ":99"
+          godot --headless --export-release "Web" export/web/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
