@@ -15,6 +15,7 @@ config/description="You’re a stressed engineer. Dodge bugs, grab fixes, keep y
 config/version="0.0.4"
 run/main_scene="res://menu.tscn"
 config/features=PackedStringArray("4.4", "Forward Plus")
+boot_splash/bg_color=Color(0.972549, 0.976471, 0.980392, 1)
 boot_splash/image="uid://l4jtxmb2abo4"
 config/icon="uid://bb2km7eq07waw"
 
