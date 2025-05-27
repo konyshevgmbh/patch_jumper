@@ -1,4 +1,4 @@
-name: Deploy Godot Web Game to GitHub Pages
+name: Deploy Godot Web Game to GitHub Pages and Android APK
 
 on:
   push:
@@ -24,6 +24,14 @@ jobs:
             echo "changed=false" >> $GITHUB_OUTPUT
           fi
 
+      - name: Get version from project.godot
+        if: steps.version_check.outputs.changed == 'true'
+        id: get_version
+        run: |
+          VERSION=$(grep 'config/version=' project.godot | cut -d'"' -f2)
+          echo "version=$VERSION" >> $GITHUB_OUTPUT
+          echo "Version: $VERSION"
+
       - name: Setup Godot
         if: steps.version_check.outputs.changed == 'true'
         uses: chickensoft-games/setup-godot@v1
@@ -32,13 +40,30 @@ jobs:
           use-dotnet: false
           include-templates: true
 
+      - name: Setup Java JDK
+        if: steps.version_check.outputs.changed == 'true'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        if: steps.version_check.outputs.changed == 'true'
+        uses: android-actions/setup-android@v3
+        with:
+          api-level: 33
+          build-tools: 33.0.0
+          ndk-version: 23.2.8568313
+
       - name: Verify Godot installation
         if: steps.version_check.outputs.changed == 'true'
         run: godot --version
 
-      - name: Create export directory
+      - name: Create export directories
         if: steps.version_check.outputs.changed == 'true'
-        run: mkdir -p build/web
+        run: |
+          mkdir -p build/web
+          mkdir -p build/android
 
       - name: Export project for web
         if: steps.version_check.outputs.changed == 'true'
@@ -46,6 +71,15 @@ jobs:
           godot --headless --verbose --export-release "Web" build/web/index.html
         env:
           DISPLAY: ":99"
+
+      - name: Export project for Android
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          godot --headless --verbose --export-release "Android" build/android/patch-jumper.apk
+        env:
+          DISPLAY: ":99"
+          ANDROID_HOME: ${{ env.ANDROID_HOME }}
+          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
 
       - name: Add .nojekyll file
         if: steps.version_check.outputs.changed == 'true'
@@ -58,3 +92,33 @@ jobs:
           github_token: ${{ secrets.GITHUB_TOKEN }}
           publish_dir: build/web
           cname: false
+
+      - name: Upload Android APK as artifact
+        if: steps.version_check.outputs.changed == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: patch-jumper-android-v${{ steps.get_version.outputs.version }}
+          path: build/android/patch-jumper.apk
+          retention-days: 30
+
+      - name: Create GitHub Release
+        if: steps.version_check.outputs.changed == 'true'
+        uses: softprops/action-gh-release@v1
+        with:
+          tag_name: v${{ steps.get_version.outputs.version }}
+          name: Release v${{ steps.get_version.outputs.version }}
+          draft: false
+          prerelease: false
+          files: |
+            build/android/patch-jumper.apk
+          body: |
+            ## Release v${{ steps.get_version.outputs.version }}
+
+            ### Downloads
+            - **Android APK**: patch-jumper.apk
+            - **Web Version**: Available at GitHub Pages
+
+            ### Changes
+            - Version bump to v${{ steps.get_version.outputs.version }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
