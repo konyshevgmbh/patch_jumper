@@ -2,12 +2,32 @@
 
 ![Game Preview](preview.png)
 
-You are a stressed-out engineer. Run through a field of bugs, collect fixes, avoid conflicts, don’t lose your HEAD, and push the build before the deadline.
+> **You are a frazzled engineer on the run!**
+>
+> - **Dash through a field of bugs**
+> - **Snag fixes**
+> - **Dodge conflicts**
+> - **Don’t lose your `HEAD`**
+> - **Push the build before the deadline!**
 
-This game was made in Godot, thrown together in 30 minutes on a Saturday — right after a teammate lost their HEAD (literally) in a bad merge and got really upset.
+---
 
-P.S. Any resemblance to real CAD tools or other products is purely in your imagination.
+## ⚡ About
 
-P.S. P.S. Everything here is piled together in the messiest way possible — please don’t do this in real projects! 😅
+This game was thrown together in Godot during a chaotic **30-minute coding sprint** on a Saturday—right after a teammate *literally* lost their `HEAD` in a bad merge and got hilariously (and tragically) upset.
 
-All the CAD tools I’ve ever made live on in my heart.
+---
+
+## 🚨 Disclaimers
+
+- **Any resemblance to real CAD tools, software, or engineering trauma is entirely your imagination. 😉**
+- **This code is a tangled mess of hacks and shortcuts.**  
+  _Do not_ use as a reference for real-world projects!  
+  <sub>Unless you want your manager to lose their `HEAD`, too… 😅</sub>
+
+---
+
+## 🛠️ Dev Note
+
+_All the CAD tools I’ve ever built (or broken) live on in my heart._  
+**Happy patching!**
