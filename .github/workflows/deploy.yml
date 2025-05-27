@@ -5,26 +5,55 @@ on:
     branches: [ main ]
 
 jobs:
-  build:
+  deploy:
     runs-on: ubuntu-latest
-
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v3
-
-      - name: Set up Godot
-        uses: firebelley/setup-godot@v3
+        uses: actions/checkout@v4
         with:
-          version: 4.2.2
-          use-headless: true
+          fetch-depth: 2
 
-      - name: Export project to HTML5
+      - name: Check if version changed in project.godot
+        id: version_check
         run: |
-          mkdir -p export/web
-          godot --headless --export-release "Web" export/web/index.html
+          if git diff HEAD^ HEAD -- project.godot | grep -E '^\+config/version='; then
+            echo "Version changed"
+            echo "changed=true" >> $GITHUB_OUTPUT
+          else
+            echo "Version did not change"
+            echo "changed=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Setup Godot
+        if: steps.version_check.outputs.changed == 'true'
+        uses: chickensoft-games/setup-godot@v1
+        with:
+          version: 4.3.0
+          use-dotnet: false
+
+      - name: Verify Godot installation
+        if: steps.version_check.outputs.changed == 'true'
+        run: godot --version
+
+      - name: Create export directory
+        if: steps.version_check.outputs.changed == 'true'
+        run: mkdir -p build/web
+
+      - name: Export project for web
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          godot --headless --verbose --export-release "Web" build/web/index.html
+        env:
+          DISPLAY: ":99"
+
+      - name: Add .nojekyll file
+        if: steps.version_check.outputs.changed == 'true'
+        run: touch build/web/.nojekyll
 
       - name: Deploy to GitHub Pages
+        if: steps.version_check.outputs.changed == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./export/web
+          publish_dir: build/web
+          cname: false
