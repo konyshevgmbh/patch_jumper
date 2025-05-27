@@ -14,7 +14,7 @@
 
 ## ⚡ About
 
-This game was thrown together in Godot during a chaotic **30-minute coding sprint** on a Saturday—right after a teammate *literally* lost their `HEAD` in a bad merge and got hilariously (and tragically) upset.
+This game was thrown together in Godot during a chaotic **60-minute coding sprint** on a Saturday—right after a teammate *literally* lost their `HEAD` in a bad merge and got hilariously (and tragically) upset.
 
 ---
 
