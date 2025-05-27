@@ -20,7 +20,7 @@ This game was thrown together in Godot during a chaotic **60-minute coding sprin
 
 ## 🎮 Controls
 
-- **Arrow keys** — Move left and right
+- **Arrow keys** — Move left, right and jump
 - **Spacebar** — Jump
 
 ---
