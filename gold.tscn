@@ -1,0 +1,53 @@
+[gd_scene load_steps=5 format=3 uid="uid://cut6uy0v5ojx2"]
+
+[ext_resource type="Texture2D" uid="uid://dvqb30hpy00c1" path="res://bug.png" id="1_bl833"]
+
+[sub_resource type="GDScript" id="GDScript_2wvx2"]
+script/source = "extends Area2D
+
+
+# Called when the node enters the scene tree for the first time.
+func _ready():
+	pass # Replace with function body.
+
+
+# Called every frame. 'delta' is the elapsed time since the previous frame.
+func _process(delta):
+	pass
+
+func _on_body_entered(body):
+	if body.name == \"Player\":
+		body.open_bugs -=1
+		body.closed_bugs +=1
+		
+		queue_free()
+"
+
+[sub_resource type="SpriteFrames" id="SpriteFrames_diyfi"]
+animations = [{
+"frames": [{
+"duration": 1.0,
+"texture": ExtResource("1_bl833")
+}],
+"loop": true,
+"name": &"Idle",
+"speed": 5.0
+}]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_rk6po"]
+size = Vector2(11, 10)
+
+[node name="gold" type="Area2D"]
+script = SubResource("GDScript_2wvx2")
+
+[node name="AnimatedSprite2D" type="AnimatedSprite2D" parent="."]
+position = Vector2(-0.248518, -0.448614)
+scale = Vector2(0.203032, 0.215538)
+sprite_frames = SubResource("SpriteFrames_diyfi")
+animation = &"Idle"
+autoplay = "Idle"
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="."]
+shape = SubResource("RectangleShape2D_rk6po")
+
+[connection signal="body_entered" from="." to="." method="_on_body_entered"]

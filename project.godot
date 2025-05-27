@@ -1,0 +1,32 @@
+; Engine configuration file.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
+
+config_version=5
+
+[application]
+
+config/name="Patch Jumper"
+config/description="You’re a stressed engineer. Dodge bugs, grab fixes, keep your HEAD, and push the build before the deadline."
+config/version="0.0.1"
+run/main_scene="res://menu.tscn"
+config/features=PackedStringArray("4.4", "Forward Plus")
+boot_splash/image="uid://bb2km7eq07waw"
+config/icon="uid://bb2km7eq07waw"
+
+[display]
+
+window/stretch/mode="canvas_items"
+
+[input_devices]
+
+pointing/emulate_touch_from_mouse=true
+
+[rendering]
+
+textures/canvas_textures/default_texture_filter=0
+textures/vram_compression/import_etc2_astc=true
