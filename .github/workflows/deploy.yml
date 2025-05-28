@@ -11,11 +11,12 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 2 # Need 2 commits to compare versions
 
       - name: Check if version changed in project.godot
         id: version_check
         run: |
+          # Check if version line was modified in the last commit
           if git diff HEAD^ HEAD -- project.godot | grep -E '^\+config/version='; then
             echo "Version changed"
             echo "changed=true" >> $GITHUB_OUTPUT
@@ -28,6 +29,7 @@ jobs:
         if: steps.version_check.outputs.changed == 'true'
         id: get_version
         run: |
+          # Extract version string from project.godot file
           VERSION=$(grep 'config/version=' project.godot | cut -d'"' -f2)
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "Version: $VERSION"
@@ -37,23 +39,23 @@ jobs:
         uses: chickensoft-games/setup-godot@v1
         with:
           version: 4.3.0
-          use-dotnet: false
-          include-templates: true
+          use-dotnet: false # We don't need C# support
+          include-templates: true # Include export templates for all platforms
 
       - name: Setup Java JDK
         if: steps.version_check.outputs.changed == 'true'
         uses: actions/setup-java@v4
         with:
-          distribution: 'temurin'
-          java-version: '17'
+          distribution: 'temurin' # Eclipse Temurin distribution
+          java-version: '17' # Java 17 required for Android builds
 
       - name: Setup Android SDK
         if: steps.version_check.outputs.changed == 'true'
         uses: android-actions/setup-android@v3
         with:
-          api-level: 33
-          build-tools: 33.0.0
-          ndk-version: 23.2.8568313
+          api-level: 33 # Android 13 (API level 33)
+          build-tools: 33.0.0 # Build tools version matching API level
+          ndk-version: 23.2.8568313 # Native Development Kit version
 
       - name: Cache Android SDK
         if: steps.version_check.outputs.changed == 'true'
@@ -62,46 +64,81 @@ jobs:
           path: |
             ~/.android/sdk
             ~/.android/ndk
-          key: android-sdk-${{ runner.os }}-api33-ndk23.2.8568313
+          key: android-sdk-${{ runner.os }}-api33-ndk23.2.8568313 # Cache key for SDK and NDK
 
       - name: Verify Godot installation
         if: steps.version_check.outputs.changed == 'true'
-        run: godot --version
+        run: godot --version # Check if Godot is properly installed
 
       - name: Create export directories
         if: steps.version_check.outputs.changed == 'true'
         run: |
+          # Create directories for build outputs
           mkdir -p build/web
           mkdir -p build/android
 
       - name: Export project for web
         if: steps.version_check.outputs.changed == 'true'
         run: |
+          # Export web build (HTML5/WebAssembly)
           godot --headless --verbose --export-release "Web" build/web/index.html
         env:
-          DISPLAY: ":99"
+          DISPLAY: ":99" # Virtual display for headless operation
 
-      - name: Setup Android keystore (if secrets exist)
-        if: steps.version_check.outputs.changed == 'true' && env.ANDROID_KEYSTORE != ''
+      - name: Setup Android keystore
+        if: steps.version_check.outputs.changed == 'true'
         run: |
           mkdir -p ~/.android
-          echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > ~/.android/release.keystore
-        env:
-          ANDROID_KEYSTORE: ${{ secrets.ANDROID_KEYSTORE }}
+          if [ -n "${{ secrets.ANDROID_KEYSTORE }}" ]; then
+            # Use provided production keystore from GitHub secrets
+            echo "${{ secrets.ANDROID_KEYSTORE }}" | base64 -d > ~/.android/release.keystore
+            echo "✅ Using provided keystore"
+          else
+            # Create temporary debug keystore if secrets are not configured
+            echo "⚠️  No keystore secrets found, creating debug keystore"
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
+
+      - name: Setup Godot export settings
+        if: steps.version_check.outputs.changed == 'true'
+        run: |
+          # Create or update Godot export settings with proper keystore paths
+          mkdir -p ~/.local/share/godot/editor_settings
+          if [ -n "${{ secrets.ANDROID_KEYSTORE }}" ]; then
+            # Configure for production release with custom keystore
+            echo "export/android/android_sdk_path = \"/usr/local/lib/android/sdk\"" > ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore = \"$HOME/.android/release.keystore\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore_user = \"${{ secrets.ANDROID_KEY_ALIAS || 'releasekey' }}\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore_pass = \"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/release_keystore = \"$HOME/.android/release.keystore\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/release_keystore_user = \"${{ secrets.ANDROID_KEY_ALIAS || 'releasekey' }}\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/release_keystore_pass = \"${{ secrets.ANDROID_KEYSTORE_PASSWORD }}\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+          else
+            # Configure for debug build with default keystore
+            echo "export/android/android_sdk_path = \"/usr/local/lib/android/sdk\"" > ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore = \"$HOME/.android/debug.keystore\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore_user = \"androiddebugkey\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+            echo "export/android/debug_keystore_pass = \"android\"" >> ~/.local/share/godot/editor_settings/editor_settings-4.tres
+          fi
 
       - name: Export project for Android
         if: steps.version_check.outputs.changed == 'true'
         run: |
-          # Ensure debug keystore exists and export
-          godot --headless --verbose --export-release "Android" build/android/patch-jumper.apk
+          # Export APK based on available keystore type
+          if [ -n "${{ secrets.ANDROID_KEYSTORE }}" ]; then
+            echo "🔐 Building signed release APK"
+            godot --headless --verbose --export-release "Android" build/android/patch-jumper.apk
+          else
+            echo "🔓 Building unsigned debug APK"
+            godot --headless --verbose --export-debug "Android" build/android/patch-jumper.apk
+          fi
         env:
-          DISPLAY: ":99"
-          ANDROID_HOME: ${{ env.ANDROID_HOME }}
-          ANDROID_NDK_HOME: ${{ env.ANDROID_NDK_HOME }}
+          DISPLAY: ":99" # Virtual display for headless operation
 
       - name: Verify APK was created
         if: steps.version_check.outputs.changed == 'true'
         run: |
+          # Check if APK file was successfully created
           if [ ! -f "build/android/patch-jumper.apk" ]; then
             echo "❌ APK export failed"
             exit 1
@@ -111,15 +148,15 @@ jobs:
 
       - name: Add .nojekyll file
         if: steps.version_check.outputs.changed == 'true'
-        run: touch build/web/.nojekyll
+        run: touch build/web/.nojekyll # Disable Jekyll processing for GitHub Pages
 
       - name: Deploy to GitHub Pages
         if: steps.version_check.outputs.changed == 'true'
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: build/web
-          cname: false
+          publish_dir: build/web # Directory containing web build
+          cname: false # Don't use custom domain
 
       - name: Upload Android APK as artifact
         if: steps.version_check.outputs.changed == 'true'
@@ -127,16 +164,16 @@ jobs:
         with:
           name: patch-jumper-android-v${{ steps.get_version.outputs.version }}
           path: build/android/patch-jumper.apk
-          retention-days: 30
+          retention-days: 30 # Keep artifact for 30 days
 
       - name: Create GitHub Release
         if: steps.version_check.outputs.changed == 'true'
         uses: softprops/action-gh-release@v1
         with:
-          tag_name: v${{ steps.get_version.outputs.version }}
-          name: Release v${{ steps.get_version.outputs.version }}
-          draft: false
-          prerelease: false
+          tag_name: v${{ steps.get_version.outputs.version }} # Git tag for the release
+          name: Release v${{ steps.get_version.outputs.version }} # Release title
+          draft: false # Publish immediately
+          prerelease: false # Mark as stable release
           files: |
             build/android/patch-jumper.apk
           body: |
@@ -154,6 +191,7 @@ jobs:
       - name: Build Summary
         if: steps.version_check.outputs.changed == 'true'
         run: |
+          # Display build completion summary
           echo "🎉 Build completed successfully!"
           echo "📱 Android APK: patch-jumper.apk"
           echo "🌐 Web build deployed to GitHub Pages"
