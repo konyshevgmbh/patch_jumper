@@ -49,13 +49,20 @@ jobs:
           distribution: 'temurin' # Eclipse Temurin distribution
           java-version: '17' # Java 17 required for Android builds
 
-      - name: Setup Android SDK
-        if: steps.version_check.outputs.changed == 'true'
+      - name: Set up Android SDK
         uses: android-actions/setup-android@v3
         with:
-          api-level: 33 # Android 13 (API level 33)
-          build-tools: 33.0.0 # Build tools version matching API level
-          ndk-version: 23.2.8568313 # Native Development Kit version
+          cmdline-tools-version: 12266719
+          accept-android-sdk-licenses: true
+          log-accepted-android-sdk-licenses: true
+          packages: |
+            platform-tools
+            build-tools;33.0.0
+            platforms;android-33
+            ndk;23.2.8568313 # NDK version for Godot 4.3
+
+      - name: Accept Android SDK licenses
+        run: yes | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses
 
       - name: Cache Android SDK
         if: steps.version_check.outputs.changed == 'true'
