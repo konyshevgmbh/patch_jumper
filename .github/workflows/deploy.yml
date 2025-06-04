@@ -28,9 +28,8 @@ jobs:
         if: steps.version_check.outputs.changed == 'true'
         uses: chickensoft-games/setup-godot@v1
         with:
-          version: 4.3.0
+          version: 4.4.1
           use-dotnet: false
-          include-templates: true
 
       - name: Verify Godot installation
         if: steps.version_check.outputs.changed == 'true'
